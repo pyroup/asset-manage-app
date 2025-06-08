@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // リレーション
+  assets             Asset[]
+  portfolioSnapshots PortfolioSnapshot[]
+  userSessions       UserSession[]
+
+  @@map("users")
+}
+
+model AssetCategory {
+  id          String   @id
+  name        String
+  description String?
+  color       String   @default("#3B82F6")
+  icon        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // リレーション
+  assets Asset[]
+
+  @@map("asset_categories")
+}
+
+model Asset {
+  id               String   @id @default(cuid())
+  userId           String
+  categoryId       String
+  name             String
+  symbol           String?
+  quantity         Float
+  acquisitionPrice Float
+  currentPrice     Float
+  acquisitionDate  DateTime
+  currency         String   @default("JPY")
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // リレーション
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     AssetCategory   @relation(fields: [categoryId], references: [id])
+  priceHistory PriceHistory[]
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([symbol])
+  @@map("assets")
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  assetId   String
+  price     Float
+  date      DateTime
+  source    String   @default("manual") // 'manual' | 'api'
+  createdAt DateTime @default(now())
+
+  // リレーション
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@index([date])
+  @@map("price_history")
+}
+
+model PortfolioSnapshot {
+  id                   String   @id @default(cuid())
+  userId               String
+  totalValue           Float
+  totalGainLoss        Float
+  totalGainLossPercent Float
+  snapshotDate         DateTime
+  createdAt            DateTime @default(now())
+
+  // リレーション
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([snapshotDate])
+  @@map("portfolio_snapshots")
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // リレーション
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+  @@map("user_sessions")
+} 
