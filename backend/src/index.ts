@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
 
 import { connectDatabase, disconnectDatabase } from './config/database';
 import { errorHandler } from './middleware/errorHandler';
@@ -48,6 +49,12 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// 本番環境でフロントエンドの静的ファイルを配信
+if (process.env.NODE_ENV === 'production') {
+  // Next.js exportの場合の静的ファイル配信
+  app.use(express.static(path.join(__dirname, '../../frontend/out')));
+}
+
 // ヘルスチェックエンドポイント
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -63,6 +70,16 @@ app.use('/api/assets', assetsRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/reports', reportsRoutes);
+
+// 本番環境でNext.jsアプリのルートハンドリング
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    // APIリクエスト以外はindex.htmlを返す（SPAのルーティング）
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(__dirname, '../../frontend/out/index.html'));
+    }
+  });
+}
 
 // エラーハンドリング
 app.use(notFoundHandler);

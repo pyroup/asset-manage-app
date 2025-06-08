@@ -19,7 +19,9 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') + '/api',
+      baseURL: process.env.NODE_ENV === 'production' 
+        ? '/api' // 本番環境では相対パス
+        : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') + '/api',
       headers: {
         'Content-Type': 'application/json',
       },
