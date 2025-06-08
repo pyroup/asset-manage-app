@@ -24,7 +24,7 @@ cd shisan-kanri
 
 ### 2.2 初期ディレクトリ構成
 ```bash
-mkdir -p frontend backend shared docs deployment
+mkdir -p app shared docs deployment
 mkdir -p docs/{images,diagrams}
 mkdir -p deployment/{azure,github,scripts}
 ```
@@ -35,68 +35,15 @@ git init
 echo "node_modules/\n.env\n.env.local\n*.log\ndist/\nbuild/\n.DS_Store" > .gitignore
 ```
 
-## 3. バックエンド環境構築
+## 3. アプリケーション環境構築
 
-### 3.1 Node.js プロジェクト初期化
+### 3.1 Next.js プロジェクト作成
 ```bash
-cd backend
-npm init -y
-```
-
-### 3.2 必要パッケージインストール
-```bash
-# メインの依存関係
-npm install express cors helmet morgan compression
-npm install jsonwebtoken bcryptjs
-npm install prisma @prisma/client
-npm install zod express-rate-limit
-npm install dotenv
-
-# 開発依存関係
-npm install -D typescript @types/node @types/express
-npm install -D @types/jsonwebtoken @types/bcryptjs @types/cors
-npm install -D nodemon ts-node concurrently
-npm install -D jest @types/jest supertest @types/supertest
-npm install -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
-npm install -D prettier eslint-config-prettier eslint-plugin-prettier
-```
-
-### 3.3 TypeScript設定
-```bash
-npx tsc --init
-```
-
-### 3.4 Prisma初期設定
-```bash
-npx prisma init
-```
-
-### 3.5 package.json スクリプト設定
-backend/package.jsonに以下のスクリプトを追加：
-```json
-{
-  "scripts": {
-    "dev": "nodemon src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "test": "jest",
-    "lint": "eslint src/**/*.ts",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev"
-  }
-}
-```
-
-## 4. フロントエンド環境構築
-
-### 4.1 Next.js プロジェクト作成
-```bash
-cd ../frontend
+cd app
 npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
 ```
 
-### 4.2 追加パッケージインストール
+### 3.2 追加パッケージインストール
 ```bash
 # UI & スタイリング
 npm install @radix-ui/react-alert-dialog @radix-ui/react-avatar
@@ -120,7 +67,7 @@ npm install -D jest @testing-library/react @testing-library/jest-dom
 npm install -D jest-environment-jsdom
 ```
 
-### 4.3 shadcn/ui初期設定
+### 3.3 shadcn/ui初期設定
 ```bash
 npx shadcn-ui@latest init
 ```
@@ -133,38 +80,34 @@ npx shadcn-ui@latest add dialog alert-dialog toast
 npx shadcn-ui@latest add avatar separator tabs
 ```
 
-## 5. 開発用コマンド作成
+## 4. 開発用コマンド作成
 
-### 5.1 ルートディレクトリのpackage.json
+### 4.1 ルートディレクトリのpackage.json
 ```json
 {
   "name": "shisan-kanri",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && npm run build",
-    "build:frontend": "cd frontend && npm run build",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "lint": "cd backend && npm run lint && cd ../frontend && npm run lint",
-    "test": "cd backend && npm run test && cd ../frontend && npm run test"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
+    "dev": "cd app && npm run dev",
+    "build": "cd app && npm run build",
+    "start": "cd app && npm start",
+    "install:all": "npm install && cd app && npm install && cd ../shared && npm install",
+    "lint": "cd app && npm run lint",
+    "test": "cd app && npm run test",
+    "db:generate": "cd app && npm run db:generate",
+    "db:push": "cd app && npm run db:push",
+    "db:migrate": "cd app && npm run db:migrate",
+    "db:seed": "cd app && npm run db:seed",
+    "db:studio": "cd app && npm run db:studio"
   }
 }
 ```
 
-### 5.2 concurrentlyインストール
-```bash
-npm install -D concurrently
-```
 
-## 6. Azure App Service デプロイ設定
 
-### 6.1 Azure CLI設定（オプション）
+## 5. Azure App Service デプロイ設定
+
+### 5.1 Azure CLI設定（オプション）
 ```bash
 # Azure CLIインストール（未インストールの場合）
 # Windows: 
@@ -178,24 +121,9 @@ npm install -D concurrently
 az login
 ```
 
-### 6.2 デプロイ設定ファイル作成
+### 5.2 デプロイ設定ファイル作成
 
-#### deployment/azure/app-service-backend.json
-```json
-{
-  "name": "shisan-kanri-api",
-  "resourceGroup": "rg-shisan-kanri",
-  "location": "Japan East",
-  "runtime": "node|18-lts",
-  "sku": "B1",
-  "environmentVariables": {
-    "NODE_ENV": "production",
-    "PORT": "8000"
-  }
-}
-```
-
-#### deployment/azure/app-service-frontend.json
+#### deployment/azure/app-service-app.json
 ```json
 {
   "name": "shisan-kanri-web",
@@ -208,16 +136,16 @@ az login
 }
 ```
 
-### 6.3 GitHub Actions ワークフロー
+### 5.3 GitHub Actions ワークフロー
 
-#### .github/workflows/deploy-backend.yml
+#### .github/workflows/deploy-app.yml
 ```yaml
-name: Deploy Backend to Azure App Service
+name: Deploy App to Azure App Service
 
 on:
   push:
     branches: [ main ]
-    paths: [ 'backend/**' ]
+    paths: [ 'app/**' ]
 
 jobs:
   deploy:
@@ -232,66 +160,65 @@ jobs:
         
     - name: Install dependencies
       run: |
-        cd backend
+        cd app
         npm ci
         
     - name: Build
       run: |
-        cd backend
+        cd app
         npm run build
         
     - name: Deploy to Azure App Service
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'shisan-kanri-api'
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_BACKEND }}
-        package: './backend'
+        app-name: 'shisan-kanri-web'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_APP }}
+        package: './app'
 ```
 
-## 7. 開発開始
+## 6. 開発開始
 
-### 7.1 全依存関係インストール
+### 6.1 全依存関係インストール
 ```bash
 npm run install:all
 ```
 
-### 7.2 環境変数設定
+### 6.2 環境変数設定
 ```bash
-# backend/.env ファイルを作成
-cd backend
+# app/.env ファイルを作成
+cd app
 cp .env.example .env
 # 必要な環境変数を設定
 ```
 
-### 7.3 データベース初期化
+### 6.3 データベース初期化
 ```bash
-cd backend
+cd app
 npx prisma generate
 npx prisma db push
 ```
 
-### 7.4 開発サーバー起動
+### 6.4 開発サーバー起動
 ```bash
 npm run dev
 ```
 
-これで以下のサーバーが起動します：
-- フロントエンド: http://localhost:3000
-- バックエンド: http://localhost:3001
+これでアプリケーション（フロントエンド+バックエンド統合）が起動します：
+- アプリケーション: http://localhost:3000
 
-### 7.5 動作確認
+### 6.5 動作確認
 1. ブラウザで http://localhost:3000 にアクセス
 2. 「資産管理システム」のページが表示されることを確認
-3. http://localhost:3001/health にアクセスして API が動作することを確認
+3. http://localhost:3000/api/health にアクセスして API が動作することを確認
 
-## 8. Azure App Service デプロイ手順
+## 7. Azure App Service デプロイ手順
 
-### 8.1 リソースグループ作成
+### 7.1 リソースグループ作成
 ```bash
 az group create --name rg-shisan-kanri --location "Japan East"
 ```
 
-### 8.2 App Serviceプラン作成
+### 7.2 App Serviceプラン作成
 ```bash
 az appservice plan create \
   --name plan-shisan-kanri \
@@ -300,27 +227,17 @@ az appservice plan create \
   --is-linux
 ```
 
-### 8.3 バックエンドApp Service作成
+### 7.3 App Service作成
 ```bash
 az webapp create \
   --resource-group rg-shisan-kanri \
   --plan plan-shisan-kanri \
-  --name shisan-kanri-api \
+  --name shisan-kanri-app \
   --runtime "NODE|18-lts" \
   --deployment-local-git
 ```
 
-### 8.4 フロントエンドApp Service作成
-```bash
-az webapp create \
-  --resource-group rg-shisan-kanri \
-  --plan plan-shisan-kanri \
-  --name shisan-kanri-web \
-  --runtime "NODE|18-lts" \
-  --deployment-local-git
-```
-
-### 8.5 PostgreSQLデータベース作成
+### 7.4 PostgreSQLデータベース作成
 ```bash
 az postgres flexible-server create \
   --resource-group rg-shisan-kanri \
@@ -333,7 +250,7 @@ az postgres flexible-server create \
   --storage-size 32
 ```
 
-## 9. 次のステップ
+## 8. 次のステップ
 
 1. **認証システムの実装**
 2. **資産管理機能の実装**
@@ -342,18 +259,18 @@ az postgres flexible-server create \
 5. **Azure App Serviceへのデプロイ**
 6. **監視・ログ設定**
 
-## 10. トラブルシューティング
+## 9. トラブルシューティング
 
-### 10.1 Azure App Service関連
+### 9.1 Azure App Service関連
 ```bash
 # ログの確認
-az webapp log tail --name shisan-kanri-api --resource-group rg-shisan-kanri
+az webapp log tail --name shisan-kanri-app --resource-group rg-shisan-kanri
 
 # アプリケーション設定の確認
-az webapp config appsettings list --name shisan-kanri-api --resource-group rg-shisan-kanri
+az webapp config appsettings list --name shisan-kanri-app --resource-group rg-shisan-kanri
 ```
 
-### 10.2 Node.jsバージョン確認
+### 9.2 Node.jsバージョン確認
 ```bash
 # Azure App Serviceで利用可能なNode.jsバージョン確認
 az webapp list-runtimes --linux | grep -i node

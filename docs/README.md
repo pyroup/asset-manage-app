@@ -44,14 +44,13 @@
 
 ```
 shisan-kanri/
-├── frontend/          # Next.js フロントエンドアプリケーション
-├── backend/           # Express.js バックエンドAPI
+├── app/               # Next.js フルスタックアプリケーション（フロントエンド+API）
 ├── shared/            # 共通の型定義・ユーティリティ
 ├── docs/              # プロジェクトドキュメント
 │   ├── requirements.md      # 要件定義書
 │   ├── database-design.md   # データベース設計書
 │   ├── api-design.md        # API設計書
-│   ├── frontend-design.md   # フロントエンド設計書
+│   ├── app-design.md        # フロントエンド設計書
 │   ├── setup-guide.md       # 開発環境セットアップガイド
 │   └── README.md           # プロジェクト概要
 └── deployment/        # デプロイ設定ファイル（Azure App Service等）
@@ -80,13 +79,13 @@ npm run install:all
 
 ### 3. 環境変数設定
 ```bash
-# backend/.env ファイルを作成
-cp backend/.env.example backend/.env
+# app/.env ファイルを作成
+cp app/.env.example app/.env
 ```
 
 ### 4. データベース初期化
 ```bash
-cd backend
+cd app
 npx prisma generate
 npx prisma db push
 npx prisma db seed
@@ -97,8 +96,8 @@ npx prisma db seed
 npm run dev
 ```
 
-- フロントエンド: http://localhost:3000
-- バックエンドAPI: http://localhost:3001
+- アプリケーション: http://localhost:3000
+- API: http://localhost:3000/api
 - Prisma Studio: http://localhost:5555
 
 ## 📚 ドキュメント
@@ -108,7 +107,7 @@ npm run dev
 - **[要件定義書](./requirements.md)**: 機能要件・非機能要件の詳細
 - **[データベース設計書](./database-design.md)**: テーブル設計とRepository Pattern
 - **[API設計書](./api-design.md)**: RESTful APIエンドポイント仕様
-- **[フロントエンド設計書](./frontend-design.md)**: コンポーネント設計とUI/UX
+- **[フロントエンド設計書](./app-design.md)**: コンポーネント設計とUI/UX
 - **[セットアップガイド](./setup-guide.md)**: 開発環境構築の詳細手順
 
 ## 🏗 開発フェーズ
@@ -139,11 +138,8 @@ npm run dev
 # 全テスト実行
 npm run test
 
-# バックエンドテスト
-cd backend && npm run test
-
-# フロントエンドテスト
-cd frontend && npm run test
+# アプリケーションテスト
+cd app && npm run test
 ```
 
 ## 📦 ビルド・デプロイ
@@ -153,18 +149,14 @@ cd frontend && npm run test
 # 本番ビルド
 npm run build
 
-# バックエンドのみ
-npm run build:backend
-
-# フロントエンドのみ
-npm run build:frontend
+# アプリケーションのみ
+npm run build
 ```
 
 ### Azure App Serviceデプロイ
 ```bash
 # Azure CLIを使用したデプロイ
-az webapp up --name shisan-kanri-api --resource-group rg-shisan-kanri
-az webapp up --name shisan-kanri-web --resource-group rg-shisan-kanri
+az webapp up --name shisan-kanri-app --resource-group rg-shisan-kanri
 ```
 
 ## 🔧 開発ツール
@@ -215,7 +207,7 @@ npm run format
 ┌─────────────────┐    ┌─────────────────┐
 │   Azure CDN     │    │  Azure App      │
 │   (Static Web)  │    │  Service        │
-│   Frontend      │◄───┤   Backend API   │
+│   App           │◄───┤   App API       │
 └─────────────────┘    └─────────────────┘
                                 │
                                 ▼
