@@ -24,30 +24,46 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// セキュリティミドルウェア
-app.use(helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
-    },
-  } : false,
-  referrerPolicy: {
-    policy: "strict-origin-when-cross-origin"
-  }
-}));
+// セキュリティミドルウェア（一時的に無効化）
+if (process.env.ENABLE_HELMET === 'true') {
+  app.use(helmet({
+    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        connectSrc: ["'self'", "https:", "wss:"],
+        fontSrc: ["'self'", "https:", "data:"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'", "https:"],
+        frameSrc: ["'self'"],
+        formAction: ["'self'"],
+        baseUri: ["'self'"],
+      },
+    } : false,
+    crossOriginEmbedderPolicy: false,
+    referrerPolicy: {
+      policy: "strict-origin-when-cross-origin"
+    }
+  }));
+} else {
+  console.log('🔓 Helmetは無効化されています（トラブルシューティング用）');
+}
 
 // CORS設定
+const corsOrigins: (string | RegExp)[] = process.env.NODE_ENV === 'production' 
+  ? [
+      ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+      /\.azurewebsites\.net$/,  // Azure App Service ドメイン
+    ]
+  : ['http://localhost:3000', 'http://localhost:3001'];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: corsOrigins,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
 // レート制限
@@ -68,11 +84,22 @@ app.use(express.urlencoded({ extended: true }));
 
 // 本番環境でフロントエンドの静的ファイルを配信
 if (process.env.NODE_ENV === 'production') {
-  // Next.js exportの静的ファイル配信
-  app.use(express.static(path.join(__dirname, '../../frontend/out'), {
+  // Next.js exportの静的ファイル配信（より詳細な設定）
+  const frontendPath = path.join(__dirname, '../../frontend/out');
+  
+  app.use(express.static(frontendPath, {
     index: false, // 自動的にindex.htmlを返さない
-    maxAge: '1d', // キャッシュ設定
+    maxAge: '1h', // キャッシュ設定
+    setHeaders: (res, path) => {
+      // セキュリティヘッダーを緩和
+      res.set('X-Content-Type-Options', 'nosniff');
+      if (path.endsWith('.html')) {
+        res.set('Cache-Control', 'no-cache');
+      }
+    },
   }));
+  
+  console.log(`📁 静的ファイル配信設定: ${frontendPath}`);
 }
 
 // ヘルスチェックエンドポイント
@@ -82,6 +109,27 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
   });
+});
+
+// デバッグ用エンドポイント（本番環境でのトラブルシューティング用）
+app.get('/debug', (req, res) => {
+  const fs = require('fs');
+  const frontendOutPath = path.join(__dirname, '../../frontend/out');
+  const frontendIndexPath = path.join(frontendOutPath, 'index.html');
+  
+  const debugInfo = {
+    environment: process.env.NODE_ENV,
+    currentPath: __dirname,
+    frontendOutPath,
+    frontendIndexExists: fs.existsSync(frontendIndexPath),
+    frontendOutExists: fs.existsSync(frontendOutPath),
+    frontendOutContents: fs.existsSync(frontendOutPath) ? 
+      fs.readdirSync(frontendOutPath).slice(0, 10) : 'Directory not found',
+    helmet: 'enabled with custom CSP',
+    port: process.env.PORT || 3002,
+  };
+  
+  res.json(debugInfo);
 });
 
 // APIルート
