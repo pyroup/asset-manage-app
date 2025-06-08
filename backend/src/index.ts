@@ -25,7 +25,24 @@ const app = express();
 const PORT = process.env.PORT || 3002;
 
 // セキュリティミドルウェア
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  } : false,
+  referrerPolicy: {
+    policy: "strict-origin-when-cross-origin"
+  }
+}));
 
 // CORS設定
 app.use(cors({
@@ -51,8 +68,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // 本番環境でフロントエンドの静的ファイルを配信
 if (process.env.NODE_ENV === 'production') {
-  // Next.js exportの場合の静的ファイル配信
-  app.use(express.static(path.join(__dirname, '../../frontend/out')));
+  // Next.js exportの静的ファイル配信
+  app.use(express.static(path.join(__dirname, '../../frontend/out'), {
+    index: false, // 自動的にindex.htmlを返さない
+    maxAge: '1d', // キャッシュ設定
+  }));
 }
 
 // ヘルスチェックエンドポイント
@@ -73,11 +93,25 @@ app.use('/api/reports', reportsRoutes);
 
 // 本番環境でNext.jsアプリのルートハンドリング
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    // APIリクエスト以外はindex.htmlを返す（SPAのルーティング）
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(__dirname, '../../frontend/out/index.html'));
+  app.get('*', (req, res, next) => {
+    // APIリクエストはスキップ
+    if (req.path.startsWith('/api')) {
+      return next();
     }
+    
+    // 静的ファイル（拡張子あり）はスキップ
+    if (req.path.includes('.') && !req.path.endsWith('/')) {
+      return next();
+    }
+    
+    // SPAのルーティング用にindex.htmlを返す
+    const indexPath = path.join(__dirname, '../../frontend/out/index.html');
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        console.error('Index.html送信エラー:', err);
+        res.status(500).json({ error: 'ページの読み込みに失敗しました' });
+      }
+    });
   });
 }
 
