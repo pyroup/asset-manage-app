@@ -21,7 +21,7 @@ class ApiClient {
     this.client = axios.create({
       baseURL: process.env.NODE_ENV === 'production' 
         ? '/api' // 本番環境では相対パス
-        : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') + '/api',
+        : (process.env.NEXT_PUBLIC_API_URL || '/api'), // Next.js統合により相対パス
       headers: {
         'Content-Type': 'application/json',
       },
