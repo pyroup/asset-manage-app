@@ -1,0 +1,2 @@
+# AzureデプロイメントためのスタートアップコマンドをProcfileで指定
+web: node server.js

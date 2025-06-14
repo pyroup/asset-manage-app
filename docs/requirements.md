@@ -128,15 +128,15 @@
 ### 5.1 アーキテクチャ
 ```
 ┌─────────────────┐
-│   Frontend      │
+│   App           │
 │   (Next.js)     │
 └─────────────────┘
          │
     HTTP/HTTPS
          │
 ┌─────────────────┐
-│   Backend       │
-│   (Express.js)  │
+│   App (Backend) │
+│   (Next.js API) │
 └─────────────────┘
          │
     Repository
@@ -150,22 +150,18 @@
 ### 5.2 ディレクトリ構成
 ```
 shisan-kanri/
-├── frontend/          # Next.js アプリケーション
-├── backend/           # Express.js API サーバー
+├── app/               # Next.js フルスタックアプリケーション
 ├── shared/            # 共通の型定義・ユーティリティ
 ├── docs/              # ドキュメント
 └── deployment/        # デプロイ設定ファイル（Azure App Service等）
     ├── azure/         # Azure関連設定
-    │   ├── app-service-backend.json
-    │   ├── app-service-frontend.json
+    │   ├── app-service-app.json
     │   └── database-config.json
     ├── github/        # GitHub Actions ワークフロー
-    │   ├── deploy-backend.yml
-    │   ├── deploy-frontend.yml
+    │   ├── deploy-app.yml
     │   └── test.yml
     └── scripts/       # デプロイスクリプト
-        ├── deploy-backend.sh
-        ├── deploy-frontend.sh
+        ├── deploy-app.sh
         └── setup-azure.sh
 ```
 
@@ -173,7 +169,7 @@ shisan-kanri/
 ```
 ┌─────────────────┐    ┌─────────────────┐
 │  Static Web App │    │  App Service    │
-│  (Frontend)     │◄───┤  (Backend API)  │
+│  (App)          │◄───┤  (App API)      │
 │  Next.js        │    │  Node.js        │
 └─────────────────┘    └─────────────────┘
                                 │
