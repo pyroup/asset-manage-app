@@ -91,7 +91,7 @@ npx shadcn-ui@latest add avatar separator tabs
     "dev": "cd app && npm run dev",
     "build": "cd app && npm run build",
     "start": "cd app && npm start",
-    "install:all": "npm install && cd app && npm install && cd ../shared && npm install",
+    "install:all": "npm install && cd app && npm install && cd ./shared && npm install",
     "lint": "cd app && npm run lint",
     "test": "cd app && npm run test",
     "db:generate": "cd app && npm run db:generate",
@@ -276,4 +276,4 @@ az webapp config appsettings list --name shisan-kanri-app --resource-group rg-sh
 az webapp list-runtimes --linux | grep -i node
 ```
 
-これで資産管理アプリの開発環境が完全にセットアップされ、Azure App Serviceへのデプロイ準備も整いました！ 
+これで資産管理アプリの開発環境が完全にセットアップされ、Azure App Serviceへのデプロイ準備も整いました！
