@@ -181,6 +181,7 @@ $RECYCLE.BIN/
 *.db
 *.sqlite
 *.sqlite3
+*.prod.prisma
 
 # Prisma
 prisma/migrations/

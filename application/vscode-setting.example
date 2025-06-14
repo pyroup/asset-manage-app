@@ -1,0 +1,11 @@
+{
+  "appService.defaultWebAppToDeploy": "",
+  "appService.deploySubpath": "application",
+  "appService.zipIgnorePattern": [
+    "application/node_modules{,/**}",
+    "application/.next/cache{,/**}",
+    "application/logs{,/**}",
+    ".vscode{,/**}",
+    "application/.env{,/**}",
+  ]
+}

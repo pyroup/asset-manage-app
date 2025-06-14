@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid()) @db.NVarChar(30)
+  email     String   @unique @db.NVarChar(255)
+  name      String   @db.NVarChar(255)
+  password  String   @db.NVarChar(255)
+  createdAt DateTime @default(now()) @db.DateTime2
+  updatedAt DateTime @updatedAt @db.DateTime2
+
+  // リレーション
+  assets             Asset[]
+  portfolioSnapshots PortfolioSnapshot[]
+  userSessions       UserSession[]
+
+  @@map("users")
+}
+
+model AssetCategory {
+  id          String   @id @db.NVarChar(30)
+  name        String   @db.NVarChar(255)
+  description String?  @db.NVarChar(1000)
+  color       String   @default("#3B82F6") @db.NVarChar(10)
+  icon        String?  @db.NVarChar(100)
+  createdAt   DateTime @default(now()) @db.DateTime2
+  updatedAt   DateTime @updatedAt @db.DateTime2
+
+  // リレーション
+  assets Asset[]
+
+  @@map("asset_categories")
+}
+
+model Asset {
+  id               String   @id @default(cuid()) @db.NVarChar(30)
+  userId           String   @db.NVarChar(30)
+  categoryId       String   @db.NVarChar(30)
+  name             String   @db.NVarChar(255)
+  symbol           String?  @db.NVarChar(20)
+  quantity         Float    @db.Decimal(18, 8)
+  acquisitionPrice Float    @db.Decimal(18, 2)
+  currentPrice     Float    @db.Decimal(18, 2)
+  acquisitionDate  DateTime @db.Date
+  currency         String   @default("JPY") @db.NVarChar(10)
+  notes            String?  @db.NVarChar(2000)
+  createdAt        DateTime @default(now()) @db.DateTime2
+  updatedAt        DateTime @updatedAt @db.DateTime2
+
+  // リレーション
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     AssetCategory   @relation(fields: [categoryId], references: [id])
+  priceHistory PriceHistory[]
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([symbol])
+  @@map("assets")
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid()) @db.NVarChar(30)
+  assetId   String   @db.NVarChar(30)
+  price     Float    @db.Decimal(18, 2)
+  date      DateTime @db.Date
+  source    String   @default("manual") @db.NVarChar(20) // 'manual' | 'api'
+  createdAt DateTime @default(now()) @db.DateTime2
+
+  // リレーション
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@index([date])
+  @@map("price_history")
+}
+
+model PortfolioSnapshot {
+  id                   String   @id @default(cuid()) @db.NVarChar(30)
+  userId               String   @db.NVarChar(30)
+  totalValue           Float    @db.Decimal(18, 2)
+  totalGainLoss        Float    @db.Decimal(18, 2)
+  totalGainLossPercent Float    @db.Decimal(10, 4)
+  snapshotDate         DateTime @db.Date
+  createdAt            DateTime @default(now()) @db.DateTime2
+
+  // リレーション
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([snapshotDate])
+  @@map("portfolio_snapshots")
+}
+
+model UserSession {
+  id        String   @id @default(cuid()) @db.NVarChar(30)
+  userId    String   @db.NVarChar(30)
+  tokenHash String   @db.NVarChar(255)
+  expiresAt DateTime @db.DateTime2
+  createdAt DateTime @default(now()) @db.DateTime2
+
+  // リレーション
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
