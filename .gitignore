@@ -181,9 +181,7 @@ $RECYCLE.BIN/
 *.db
 *.sqlite
 *.sqlite3
-
-# Prisma
-prisma/migrations/
+*.sql
 
 # Uploads and user content
 uploads/
@@ -261,3 +259,6 @@ logs/
 
 # TypeScript
 *.tsbuildinfo 
+
+# prismaデータのマイグレーションファイル
+.prisma/migrations/
