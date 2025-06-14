@@ -31,15 +31,7 @@ const nextConfig: NextConfig = {
     compress: true,
     poweredByHeader: false,
     generateEtags: true,
-  }),
-  
-  // 実験的機能の設定
-  experimental: {
-    // サーバーコンポーネントの外部パッケージ設定
-    serverComponentsExternalPackages: ['@prisma/client'],
-  },
+  })
 };
-
-export default nextConfig;
 
 export default nextConfig;

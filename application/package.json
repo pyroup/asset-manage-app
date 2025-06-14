@@ -1,11 +1,11 @@
 {
-  "name": "shisan-kanri-app",
+  "name": "asset-management-app",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "個人の資産を一元管理するWebアプリケーション",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "heroku-postbuild": "npm run build",
     "start": "next start",
@@ -26,7 +26,7 @@
     "@headlessui/react": "^2.2.0",
     "@hookform/resolvers": "^3.10.0",
     "@prisma/client": "^6.8.2",
-    "@shisan-kanri/shared": "file:./shared",
+    "@asset-management-app/shared": "file:./shared",
     "@types/express": "^5.0.3",
     "autoprefixer": "^10.4.21",
     "axios": "^1.7.7",
