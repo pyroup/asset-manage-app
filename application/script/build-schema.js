@@ -7,26 +7,46 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const environment = process.env.NODE_ENV || 'development';
+
+console.log(`🚀 Building configuration for ${environment} environment...`);
+
+// 1. スキーマファイルの切り替え
 const schemaFile = environment === 'production' ? 'schema.prod.prisma' : 'schema.dev.prisma';
-const sourcePath = path.join(__dirname, '..', 'prisma', schemaFile);
-const targetPath = path.join(__dirname, '..', 'prisma', 'schema.prisma');
+const schemaSourcePath = path.join(__dirname, '..', 'prisma', schemaFile);
+const schemaTargetPath = path.join(__dirname, '..', 'prisma', 'schema.prisma');
 
-console.log(`Building schema for ${environment} environment...`);
-console.log(`Source file: ${schemaFile}`);
-console.log(`Source path: ${sourcePath}`);
-console.log(`Target path: ${targetPath}`);
+console.log(`📄 Schema: ${schemaFile}`);
 
-// ファイルの存在確認
-if (!fs.existsSync(sourcePath)) {
-  console.error(`Error: Source schema file not found: ${sourcePath}`);
+// スキーマファイルの存在確認
+if (!fs.existsSync(schemaSourcePath)) {
+  console.error(`❌ Schema file not found: ${schemaSourcePath}`);
+  process.exit(1);
+}
+
+// 2. 環境変数ファイルの切り替え
+const envFile = environment === 'production' ? '.env.production' : '.env.development';
+const envSourcePath = path.join(__dirname, '..', envFile);
+const envTargetPath = path.join(__dirname, '..', '.env');
+
+console.log(`🔧 Environment: ${envFile}`);
+
+// 環境変数ファイルの存在確認
+if (!fs.existsSync(envSourcePath)) {
+  console.error(`❌ Environment file not found: ${envSourcePath}`);
   process.exit(1);
 }
 
 try {
-  fs.copyFileSync(sourcePath, targetPath);
+  // スキーマファイルをコピー
+  fs.copyFileSync(schemaSourcePath, schemaTargetPath);
   console.log('✅ Schema file updated successfully!');
-  console.log(`✅ Using ${environment} configuration`);
+
+  // 環境変数ファイルをコピー
+  fs.copyFileSync(envSourcePath, envTargetPath);
+  console.log('✅ Environment variables updated successfully!');
+
+  console.log(`🎉 Configuration updated for ${environment} environment!`);
 } catch (error) {
-  console.error('❌ Error copying schema file:', error.message);
+  console.error('❌ Error updating configuration:', error.message);
   process.exit(1);
 }
