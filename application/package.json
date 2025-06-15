@@ -6,7 +6,7 @@
   "description": "個人の資産を一元管理するWebアプリケーション",  
   "scripts": {
     "dev": "npm run build:schema:dev && next dev",
-    "build": "npm run db:deploy:prod && next build",
+    "build": "next build",
     "heroku-postbuild": "npm run build",
     "start": "next start",
     "start:next": "next start",
